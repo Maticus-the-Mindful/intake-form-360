@@ -96,8 +96,8 @@ const styles = `
   .idea-banner-eyebrow { color: #fcd34d; }
 }
 .idea-banner-text {
-  font-size: 0.875rem;
-  line-height: 1.3;
+  font-size: 1rem;
+  line-height: 1.35;
   color: rgb(63 63 70);
   transition: opacity ${FADE_MS}ms ease;
   overflow: hidden;
@@ -105,7 +105,7 @@ const styles = `
   white-space: nowrap;
 }
 @media (min-width: 640px) {
-  .idea-banner-text { white-space: normal; }
+  .idea-banner-text { white-space: normal; font-size: 1.0625rem; }
 }
 @media (prefers-color-scheme: dark) {
   .idea-banner-text { color: rgb(228 228 231); }
