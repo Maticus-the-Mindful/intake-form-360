@@ -7,7 +7,6 @@ import {
   RadioGroup,
   inputClass,
 } from "./form-primitives";
-import { DynamicDyk, StaticDyk } from "./wizard-dyk";
 
 const SERVICE_OPTIONS = [
   "Website design or redesign",
@@ -55,15 +54,6 @@ const INITIAL_STATE: FormState = {
   notes: "",
 };
 
-const FALLBACK_FACT =
-  "Small-business operators spend a median 40% of their week on tasks that could be templated, automated, or handled by software. The highest-leverage wins usually aren't glamorous — they're the five-minute thing you do fifteen times a day.";
-
-const STATIC_DYK = {
-  headline: "You can hand your team a full workday back — every week.",
-  body:
-    "Teams that automate just their top three manual workflows typically reclaim 6–8 hours per employee per week. That's one full workday, every week, returned to the humans.",
-};
-
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type TextFieldKey = Exclude<keyof FormState, "services">;
@@ -105,9 +95,7 @@ type RadioStep = {
   required?: boolean;
 };
 
-type DykStep = { id: string; kind: "dyk-static" | "dyk-dynamic" };
-
-type Step = TextStep | CheckboxStep | RadioStep | DykStep;
+type Step = TextStep | CheckboxStep | RadioStep;
 
 const STEPS: Step[] = [
   {
@@ -174,7 +162,6 @@ const STEPS: Step[] = [
     options: SERVICE_OPTIONS,
     required: true,
   },
-  { id: "dyk-dynamic", kind: "dyk-dynamic" },
   {
     id: "budget",
     kind: "radio",
@@ -183,7 +170,6 @@ const STEPS: Step[] = [
     options: BUDGET_OPTIONS,
     required: true,
   },
-  { id: "dyk-static", kind: "dyk-static" },
   {
     id: "timeline",
     kind: "radio",
@@ -204,18 +190,7 @@ const STEPS: Step[] = [
   },
 ];
 
-const INPUT_STEPS_TOTAL = STEPS.filter(
-  (s) => s.kind !== "dyk-static" && s.kind !== "dyk-dynamic",
-).length;
-
-function countInputStepsThrough(index: number): number {
-  let count = 0;
-  for (let i = 0; i <= index && i < STEPS.length; i++) {
-    const k = STEPS[i].kind;
-    if (k !== "dyk-static" && k !== "dyk-dynamic") count++;
-  }
-  return count;
-}
+const INPUT_STEPS_TOTAL = STEPS.length;
 
 function isStepSatisfied(step: Step, form: FormState): boolean {
   switch (step.kind) {
@@ -229,9 +204,6 @@ function isStepSatisfied(step: Step, form: FormState): boolean {
       return !step.required || form.services.length > 0;
     case "radio":
       return !step.required || Boolean(form[step.field]);
-    case "dyk-static":
-    case "dyk-dynamic":
-      return true;
   }
 }
 
@@ -250,27 +222,17 @@ function resolveRestoredStep(targetIndex: number, form: FormState): number {
   return clamped;
 }
 
-type DynamicFactState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "ready"; fact: string }
-  | { status: "failed" };
-
 type WizardStatus = "idle" | "submitting" | "success" | "error";
 
 const WIZARD_KEY = "intake360:wizard:v1";
-const DYK_CACHE_KEY = "intake360:dyk:v1";
 
 type Persisted = { form: FormState; currentStep: number };
 
-function loadPersisted(): Partial<Persisted> & { cachedFact?: string } {
+function loadPersisted(): Partial<Persisted> {
   if (typeof window === "undefined") return {};
   try {
     const raw = window.sessionStorage.getItem(WIZARD_KEY);
-    const parsed = (raw ? JSON.parse(raw) : {}) as Partial<Persisted>;
-    const cachedFact =
-      window.sessionStorage.getItem(DYK_CACHE_KEY) || undefined;
-    return { ...parsed, cachedFact };
+    return (raw ? JSON.parse(raw) : {}) as Partial<Persisted>;
   } catch {
     return {};
   }
@@ -358,16 +320,12 @@ export function IntakeWizard() {
   const [currentStep, setCurrentStep] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [status, setStatus] = useState<WizardStatus>("idle");
-  const [dynamicFact, setDynamicFact] = useState<DynamicFactState>({
-    status: "idle",
-  });
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [hydrated, setHydrated] = useState(false);
 
   const radioAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stepContainerRef = useRef<HTMLDivElement | null>(null);
   const didMountRef = useRef(false);
-  const submittedDescriptionRef = useRef<string>("");
 
   useEffect(() => {
     // Restore wizard state from sessionStorage on mount. setState in effect is
@@ -385,9 +343,6 @@ export function IntakeWizard() {
         ? resolveRestoredStep(persisted.currentStep, mergedForm)
         : 0;
     if (restoredStep > 0) setCurrentStep(restoredStep);
-    if (persisted.cachedFact) {
-      setDynamicFact({ status: "ready", fact: persisted.cachedFact });
-    }
     setHydrated(true);
     /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -436,15 +391,6 @@ export function IntakeWizard() {
   const step = STEPS[currentStep];
 
   useEffect(() => {
-    if (step.kind !== "dyk-dynamic") return;
-    if (dynamicFact.status !== "loading") return;
-    const timer = setTimeout(() => {
-      setDynamicFact((s) => (s.status === "loading" ? { status: "failed" } : s));
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [step.kind, dynamicFact.status]);
-
-  useEffect(() => {
     return () => {
       if (radioAdvanceTimer.current) clearTimeout(radioAdvanceTimer.current);
     };
@@ -465,42 +411,6 @@ export function IntakeWizard() {
         : [...prev.services, value],
     }));
   }, []);
-
-  const kickOffDynamicFact = useCallback((description: string) => {
-    const trimmed = description.trim();
-    if (!trimmed) return;
-    if (trimmed === submittedDescriptionRef.current && dynamicFact.status === "ready") {
-      return;
-    }
-    submittedDescriptionRef.current = trimmed;
-    setDynamicFact({ status: "loading" });
-    try {
-      window.sessionStorage.removeItem(DYK_CACHE_KEY);
-    } catch {}
-
-    (async () => {
-      try {
-        const res = await fetch("/api/did-you-know", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ businessDescription: trimmed }),
-        });
-        const data = (await res.json()) as
-          | { success: true; fact: string }
-          | { success: false; error?: string };
-        if (data.success && data.fact) {
-          setDynamicFact({ status: "ready", fact: data.fact });
-          try {
-            window.sessionStorage.setItem(DYK_CACHE_KEY, data.fact);
-          } catch {}
-        } else {
-          setDynamicFact({ status: "failed" });
-        }
-      } catch {
-        setDynamicFact({ status: "failed" });
-      }
-    })();
-  }, [dynamicFact.status]);
 
   const goTo = useCallback((nextIndex: number, dir: "forward" | "back") => {
     if (nextIndex < 0 || nextIndex >= STEPS.length) return;
@@ -529,7 +439,6 @@ export function IntakeWizard() {
       setStatus("success");
       try {
         window.sessionStorage.removeItem(WIZARD_KEY);
-        window.sessionStorage.removeItem(DYK_CACHE_KEY);
       } catch {}
     } catch (err) {
       setStatus("error");
@@ -566,10 +475,6 @@ export function IntakeWizard() {
           return;
         }
       }
-
-      if (current.id === "business-description") {
-        kickOffDynamicFact(raw);
-      }
     }
 
     if (current.kind === "checkbox") {
@@ -595,7 +500,7 @@ export function IntakeWizard() {
     }
 
     goTo(currentStep + 1, "forward");
-  }, [currentStep, form, goTo, kickOffDynamicFact, submitForm]);
+  }, [currentStep, form, goTo, submitForm]);
 
   const goBack = useCallback(() => {
     if (currentStep === 0) return;
@@ -629,12 +534,10 @@ export function IntakeWizard() {
     return <SuccessPanel />;
   }
 
-  const stepKind = step.kind;
-  const isDyk = stepKind === "dyk-static" || stepKind === "dyk-dynamic";
-  const inputStepNumber = countInputStepsThrough(currentStep);
-  const progressPct = isDyk
-    ? Math.min(100, Math.round(((inputStepNumber) / INPUT_STEPS_TOTAL) * 100))
-    : Math.round(((inputStepNumber - 1) / Math.max(1, INPUT_STEPS_TOTAL - 1)) * 100);
+  const inputStepNumber = currentStep + 1;
+  const progressPct = Math.round(
+    ((inputStepNumber - 1) / Math.max(1, INPUT_STEPS_TOTAL - 1)) * 100,
+  );
   const remainingPct = Math.max(0, Math.min(100, 100 - progressPct));
 
   const submitting = status === "submitting";
@@ -657,21 +560,12 @@ export function IntakeWizard() {
             <span aria-hidden>←</span>
             <span>Back</span>
           </button>
-          <p
-            className="ml-auto font-mono text-[12px] font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:text-zinc-200 sm:text-[13px]"
-            aria-hidden={isDyk ? "true" : undefined}
-          >
-            {isDyk ? (
-              "A quick note"
-            ) : (
-              <>
-                Step{" "}
-                <span className="text-amber-600 dark:text-amber-300">
-                  {inputStepNumber}
-                </span>{" "}
-                of {INPUT_STEPS_TOTAL}
-              </>
-            )}
+          <p className="ml-auto font-mono text-[12px] font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:text-zinc-200 sm:text-[13px]">
+            Step{" "}
+            <span className="text-amber-600 dark:text-amber-300">
+              {inputStepNumber}
+            </span>{" "}
+            of {INPUT_STEPS_TOTAL}
           </p>
         </div>
         <div
@@ -680,11 +574,7 @@ export function IntakeWizard() {
           aria-valuemin={1}
           aria-valuemax={INPUT_STEPS_TOTAL}
           aria-valuenow={inputStepNumber}
-          aria-label={
-            isDyk
-              ? "A quick note — intake progress"
-              : `Step ${inputStepNumber} of ${INPUT_STEPS_TOTAL}`
-          }
+          aria-label={`Step ${inputStepNumber} of ${INPUT_STEPS_TOTAL}`}
         >
           <div
             className="wizard-progress-fill h-full"
@@ -708,9 +598,6 @@ export function IntakeWizard() {
           onToggleService={toggleService}
           onRadioChange={handleRadioChange}
           onAdvance={advance}
-          onBack={goBack}
-          canBack={currentStep > 0}
-          dynamicFact={dynamicFact}
         />
       </div>
     </div>
@@ -726,9 +613,6 @@ type StepBodyProps = {
   onToggleService: (v: string) => void;
   onRadioChange: (field: "budget" | "timeline", v: string) => void;
   onAdvance: () => void;
-  onBack: () => void;
-  canBack: boolean;
-  dynamicFact: DynamicFactState;
 };
 
 function StepBody(props: StepBodyProps) {
@@ -742,33 +626,6 @@ function StepBody(props: StepBodyProps) {
       return <CheckboxStepView {...props} step={step} />;
     case "radio":
       return <RadioStepView {...props} step={step} />;
-    case "dyk-static":
-      return (
-        <StaticDyk
-          headline={STATIC_DYK.headline}
-          body={STATIC_DYK.body}
-          onContinue={props.onAdvance}
-          onBack={props.onBack}
-          canBack={props.canBack}
-        />
-      );
-    case "dyk-dynamic": {
-      const s = props.dynamicFact;
-      const viewState =
-        s.status === "ready"
-          ? { status: "ready" as const, fact: s.fact }
-          : s.status === "failed"
-            ? { status: "failed" as const, fallback: FALLBACK_FACT }
-            : { status: "loading" as const };
-      return (
-        <DynamicDyk
-          state={viewState}
-          onContinue={props.onAdvance}
-          onBack={props.onBack}
-          canBack={props.canBack}
-        />
-      );
-    }
   }
 }
 
