@@ -221,13 +221,13 @@ export function IntakeHero() {
           </span>
           <p
             aria-hidden
-            className="hero-services-custom mb-1 text-center font-mono text-[8px] font-medium uppercase tracking-[0.48em] text-amber-200/55 sm:hidden"
+            className="hero-services-custom mb-1.5 text-center font-mono text-[11px] font-medium uppercase tracking-[0.42em] text-amber-200/60 sm:hidden"
           >
             Custom
           </p>
           <div
             aria-hidden
-            className="hero-services flex items-center justify-center gap-2 font-mono text-[9px] font-medium uppercase tracking-[0.22em] text-amber-100/85 sm:gap-3 sm:text-[10.5px] sm:tracking-[0.28em]"
+            className="hero-services flex items-center justify-center gap-2.5 font-mono text-[13px] font-medium uppercase tracking-[0.2em] text-amber-100/90 sm:gap-3.5 sm:text-[14.5px] sm:tracking-[0.24em]"
           >
             <span>
               <span className="hidden sm:inline">Custom&nbsp;</span>Software
@@ -245,19 +245,11 @@ export function IntakeHero() {
       </div>
 
       <div className="px-5 pt-5 sm:px-10 sm:pt-6">
-        <p className="hero-lede font-serif text-[0.98rem] leading-[1.55] text-zinc-700 sm:text-base dark:text-zinc-200">
+        <p className="hero-lede font-serif text-[1.15rem] leading-[1.55] text-zinc-700 sm:text-lg dark:text-zinc-200">
           <span className="font-medium italic text-zinc-900 dark:text-white">
             Good to meet you at The Big Table 2026.
           </span>{" "}
           A few quick details and we&apos;re ready to build — I&apos;ll reach out personally.
-        </p>
-        <p className="hero-footline mt-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.24em] text-zinc-500 sm:mt-4 dark:text-zinc-500">
-          <span>~2&nbsp;min</span>
-          <span
-            aria-hidden
-            className="h-px flex-1 bg-gradient-to-r from-zinc-300/70 via-zinc-300/40 to-transparent dark:from-zinc-700/70 dark:via-zinc-700/40"
-          />
-          <span>reply within 48&nbsp;h</span>
         </p>
       </div>
     </header>

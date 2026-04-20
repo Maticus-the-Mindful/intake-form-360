@@ -258,8 +258,54 @@ const wizardStyles = `
   0%   { opacity: 0; transform: translateX(-12px); }
   100% { opacity: 1; transform: translateX(0); }
 }
+.wizard-progress-track {
+  position: relative;
+  background: linear-gradient(90deg, rgba(1, 126, 126, 0.08), rgba(252, 186, 88, 0.08), rgba(1, 126, 126, 0.08));
+}
 .wizard-progress-fill {
-  transition: width 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  position: relative;
+  transition: width 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  background: linear-gradient(
+    90deg,
+    rgba(1, 126, 126, 0.9) 0%,
+    rgba(94, 192, 176, 1) 22%,
+    rgba(252, 186, 88, 1) 45%,
+    rgba(255, 224, 168, 1) 55%,
+    rgba(252, 186, 88, 1) 70%,
+    rgba(94, 192, 176, 1) 88%,
+    rgba(1, 126, 126, 0.9) 100%
+  );
+  background-size: 220% 100%;
+  animation: wizard-progress-flow 4.5s linear infinite;
+  box-shadow:
+    0 0 10px rgba(252, 186, 88, 0.45),
+    0 0 2px rgba(252, 186, 88, 0.55),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.25);
+}
+.wizard-progress-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  background-size: 35% 100%;
+  background-repeat: no-repeat;
+  animation: wizard-progress-sheen 2.8s ease-in-out infinite;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+@keyframes wizard-progress-flow {
+  0%   { background-position: 220% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes wizard-progress-sheen {
+  0%   { background-position: -40% 0; }
+  60%  { background-position: 140% 0; }
+  100% { background-position: 140% 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .wizard-step {
@@ -269,7 +315,8 @@ const wizardStyles = `
     0%   { opacity: 0; }
     100% { opacity: 1; }
   }
-  .wizard-progress-fill { transition: none; }
+  .wizard-progress-fill { transition: none; animation: none; background-position: 50% 50%; }
+  .wizard-progress-fill::after { animation: none; opacity: 0; }
 }
 `;
 
@@ -557,6 +604,7 @@ export function IntakeWizard() {
   const progressPct = isDyk
     ? Math.min(100, Math.round(((inputStepNumber) / INPUT_STEPS_TOTAL) * 100))
     : Math.round(((inputStepNumber - 1) / Math.max(1, INPUT_STEPS_TOTAL - 1)) * 100);
+  const remainingPct = Math.max(0, Math.min(100, 100 - progressPct));
 
   const submitting = status === "submitting";
 
@@ -567,7 +615,7 @@ export function IntakeWizard() {
       </style>
 
       <div className="mb-6 sm:mb-8">
-        <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="mb-2 flex items-center gap-3">
           <button
             type="button"
             onClick={goBack}
@@ -579,24 +627,37 @@ export function IntakeWizard() {
             <span>Back</span>
           </button>
           <p
-            className="font-mono text-[10px] uppercase tracking-[0.24em] text-zinc-500 dark:text-zinc-400"
+            className="ml-auto font-mono text-[12px] font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:text-zinc-200 sm:text-[13px]"
             aria-hidden={isDyk ? "true" : undefined}
           >
-            {isDyk ? "A quick note" : `Step ${inputStepNumber} of ${INPUT_STEPS_TOTAL}`}
+            {isDyk ? (
+              "A quick note"
+            ) : (
+              <>
+                Step{" "}
+                <span className="text-amber-600 dark:text-amber-300">
+                  {inputStepNumber}
+                </span>{" "}
+                of {INPUT_STEPS_TOTAL}
+              </>
+            )}
           </p>
-          <span className="h-11 min-w-11" aria-hidden />
         </div>
         <div
-          className="h-[2px] w-full overflow-hidden rounded-full bg-zinc-200/80 dark:bg-zinc-800"
+          className="wizard-progress-track flex h-[5px] w-full justify-end overflow-hidden rounded-full bg-zinc-200/70 dark:bg-zinc-800/80"
           role="progressbar"
           aria-valuemin={1}
           aria-valuemax={INPUT_STEPS_TOTAL}
           aria-valuenow={inputStepNumber}
-          aria-label="Intake progress"
+          aria-label={
+            isDyk
+              ? "A quick note — intake progress"
+              : `Step ${inputStepNumber} of ${INPUT_STEPS_TOTAL}`
+          }
         >
           <div
-            className="wizard-progress-fill h-full bg-amber-400/90 dark:bg-amber-300/90"
-            style={{ width: `${progressPct}%` }}
+            className="wizard-progress-fill h-full"
+            style={{ width: `${remainingPct}%` }}
           />
         </div>
       </div>
