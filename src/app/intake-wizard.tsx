@@ -217,6 +217,39 @@ function countInputStepsThrough(index: number): number {
   return count;
 }
 
+function isStepSatisfied(step: Step, form: FormState): boolean {
+  switch (step.kind) {
+    case "input":
+    case "textarea": {
+      const raw = (form[step.field] as string) ?? "";
+      if (!raw.trim()) return step.skippable === true || step.required !== true;
+      return step.validate ? step.validate(raw) === null : true;
+    }
+    case "checkbox":
+      return !step.required || form.services.length > 0;
+    case "radio":
+      return !step.required || Boolean(form[step.field]);
+    case "dyk-static":
+    case "dyk-dynamic":
+      return true;
+  }
+}
+
+// Walk forward from step 0; stop at the first step whose prerequisites aren't
+// met. Guards against sessionStorage landing a visitor past a step they
+// haven't actually completed (stale state from a prior session, cleared
+// fields, etc.) — which otherwise shows a mismatched "Step N of 8" label.
+function resolveRestoredStep(targetIndex: number, form: FormState): number {
+  const clamped = Math.max(
+    0,
+    Math.min(Math.floor(targetIndex), STEPS.length - 1),
+  );
+  for (let i = 0; i < clamped; i++) {
+    if (!isStepSatisfied(STEPS[i], form)) return i;
+  }
+  return clamped;
+}
+
 type DynamicFactState =
   | { status: "idle" }
   | { status: "loading" }
@@ -343,14 +376,15 @@ export function IntakeWizard() {
     // mismatch.
     /* eslint-disable react-hooks/set-state-in-effect */
     const persisted = loadPersisted();
-    if (persisted.form) setForm((prev) => ({ ...prev, ...persisted.form }));
-    if (
-      typeof persisted.currentStep === "number" &&
-      persisted.currentStep > 0 &&
-      persisted.currentStep < STEPS.length
-    ) {
-      setCurrentStep(persisted.currentStep);
-    }
+    const mergedForm: FormState = persisted.form
+      ? { ...INITIAL_STATE, ...persisted.form }
+      : INITIAL_STATE;
+    if (persisted.form) setForm(mergedForm);
+    const restoredStep =
+      typeof persisted.currentStep === "number"
+        ? resolveRestoredStep(persisted.currentStep, mergedForm)
+        : 0;
+    if (restoredStep > 0) setCurrentStep(restoredStep);
     if (persisted.cachedFact) {
       setDynamicFact({ status: "ready", fact: persisted.cachedFact });
     }
@@ -358,10 +392,7 @@ export function IntakeWizard() {
     /* eslint-enable react-hooks/set-state-in-effect */
 
     if (typeof window !== "undefined") {
-      window.history.replaceState(
-        { wizardStep: persisted.currentStep ?? 0 },
-        "",
-      );
+      window.history.replaceState({ wizardStep: restoredStep }, "");
     }
   }, []);
 
