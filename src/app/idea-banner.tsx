@@ -100,12 +100,11 @@ const styles = `
   line-height: 1.35;
   color: rgb(63 63 70);
   transition: opacity ${FADE_MS}ms ease;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 @media (min-width: 640px) {
-  .idea-banner-text { white-space: normal; font-size: 1.0625rem; }
+  .idea-banner-text { font-size: 1.0625rem; }
 }
 @media (prefers-color-scheme: dark) {
   .idea-banner-text { color: rgb(228 228 231); }
