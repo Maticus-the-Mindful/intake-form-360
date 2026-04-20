@@ -67,15 +67,35 @@ const styles = `
 .idea-banner-bulb {
   color: #d97706;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 0 rgba(252, 186, 88, 0));
-  animation: idea-bulb-glow 3.2s ease-in-out infinite;
+  transform-origin: center;
+  will-change: filter, color, transform;
+  animation: idea-bulb-glow 2.6s ease-in-out infinite;
 }
 @media (prefers-color-scheme: dark) {
   .idea-banner-bulb { color: #fcba58; }
 }
 @keyframes idea-bulb-glow {
-  0%, 100% { filter: drop-shadow(0 0 0 rgba(252, 186, 88, 0.0)); }
-  50%      { filter: drop-shadow(0 0 6px rgba(252, 186, 88, 0.55)); }
+  0%, 100% {
+    color: #d97706;
+    transform: scale(1);
+    filter:
+      drop-shadow(0 0 0 rgba(252, 186, 88, 0))
+      drop-shadow(0 0 0 rgba(252, 186, 88, 0));
+  }
+  45% {
+    color: #fbbf24;
+    transform: scale(1.08);
+    filter:
+      drop-shadow(0 0 6px rgba(252, 186, 88, 0.85))
+      drop-shadow(0 0 14px rgba(252, 186, 88, 0.55));
+  }
+  55% {
+    color: #fde047;
+    transform: scale(1.1);
+    filter:
+      drop-shadow(0 0 8px rgba(253, 224, 71, 0.95))
+      drop-shadow(0 0 18px rgba(252, 186, 88, 0.65));
+  }
 }
 .idea-banner-copy {
   display: flex;
