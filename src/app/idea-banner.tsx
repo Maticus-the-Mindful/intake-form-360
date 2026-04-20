@@ -64,15 +64,61 @@ const styles = `
   border-radius: 0 3px 3px 0;
   background: #fcba58;
 }
+.idea-banner-bulb-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
 .idea-banner-bulb {
   color: #d97706;
-  flex-shrink: 0;
+  display: block;
   transform-origin: center;
   will-change: filter, color, transform;
   animation: idea-bulb-glow 2.6s ease-in-out infinite;
 }
 @media (prefers-color-scheme: dark) {
   .idea-banner-bulb { color: #fcba58; }
+}
+.idea-banner-sparkle {
+  position: absolute;
+  color: #fbbf24;
+  pointer-events: none;
+  opacity: 0;
+  transform-origin: center;
+  will-change: opacity, transform;
+}
+@media (prefers-color-scheme: dark) {
+  .idea-banner-sparkle { color: #fde047; }
+}
+.idea-banner-sparkle--a {
+  top: -4px;
+  right: -5px;
+  width: 9px;
+  height: 9px;
+  animation: idea-sparkle-twinkle 2.6s ease-in-out infinite;
+  animation-delay: 0.2s;
+}
+.idea-banner-sparkle--b {
+  top: 4px;
+  left: -6px;
+  width: 7px;
+  height: 7px;
+  animation: idea-sparkle-twinkle 2.6s ease-in-out infinite;
+  animation-delay: 0.9s;
+}
+.idea-banner-sparkle--c {
+  bottom: -3px;
+  right: -3px;
+  width: 6px;
+  height: 6px;
+  animation: idea-sparkle-twinkle 2.6s ease-in-out infinite;
+  animation-delay: 1.4s;
+}
+@keyframes idea-sparkle-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  30%      { opacity: 1; transform: scale(1)   rotate(45deg); }
+  60%      { opacity: 0; transform: scale(0.3) rotate(90deg); }
 }
 @keyframes idea-bulb-glow {
   0%, 100% {
@@ -132,6 +178,7 @@ const styles = `
 .idea-banner-text[data-fading="true"] { opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
   .idea-banner-bulb { animation: none; }
+  .idea-banner-sparkle { animation: none; opacity: 0; }
   .idea-banner-text { transition: none; }
 }
 `;
@@ -173,22 +220,44 @@ export function IdeaBanner() {
       </style>
       <div className="idea-banner-row">
         <span className="idea-banner-accent" aria-hidden />
-        <svg
-          className="idea-banner-bulb"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden
-        >
-          <path d="M9 18h6" />
-          <path d="M10 21h4" />
-          <path d="M12 3a6 6 0 0 0-4 10.5c.8.8 1.5 1.7 1.8 2.7.1.3.3.5.6.5h3.2c.3 0 .5-.2.6-.5.3-1 1-1.9 1.8-2.7A6 6 0 0 0 12 3z" />
-        </svg>
+        <span className="idea-banner-bulb-wrap" aria-hidden>
+          <svg
+            className="idea-banner-bulb"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 18h6" />
+            <path d="M10 21h4" />
+            <path d="M12 3a6 6 0 0 0-4 10.5c.8.8 1.5 1.7 1.8 2.7.1.3.3.5.6.5h3.2c.3 0 .5-.2.6-.5.3-1 1-1.9 1.8-2.7A6 6 0 0 0 12 3z" />
+          </svg>
+          <svg
+            className="idea-banner-sparkle idea-banner-sparkle--a"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 0 L14 10 L24 12 L14 14 L12 24 L10 14 L0 12 L10 10 Z" />
+          </svg>
+          <svg
+            className="idea-banner-sparkle idea-banner-sparkle--b"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 0 L14 10 L24 12 L14 14 L12 24 L10 14 L0 12 L10 10 Z" />
+          </svg>
+          <svg
+            className="idea-banner-sparkle idea-banner-sparkle--c"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 0 L14 10 L24 12 L14 14 L12 24 L10 14 L0 12 L10 10 Z" />
+          </svg>
+        </span>
         <div className="idea-banner-copy">
           <span className="idea-banner-eyebrow">Idea</span>
           <p
