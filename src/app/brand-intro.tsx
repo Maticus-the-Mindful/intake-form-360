@@ -3,7 +3,7 @@ import Image from "next/image";
 /* Timeline (2.4s total):
    0.00s  MM360 mark pops in (0.55s)
    0.65s  Automaticus wordmark wipes in (0.75s)
-   1.45s  hold (~0.55s)
+   1.45s  Services line fades up (0.55s)
    2.05s  overlay fades out (0.35s) and releases the form */
 const styles = `
 @property --brand-intro-angle {
@@ -39,6 +39,9 @@ const styles = `
 .brand-intro__wordmark {
   animation: brand-intro-wordmark-in 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) 0.65s both;
 }
+.brand-intro__services {
+  animation: brand-intro-services-in 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) 1.45s both;
+}
 @keyframes brand-intro-border-spin {
   to { --brand-intro-angle: 360deg; }
 }
@@ -66,10 +69,15 @@ const styles = `
     filter: blur(0);
   }
 }
+@keyframes brand-intro-services-in {
+  0%   { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
 @media (prefers-reduced-motion: reduce) {
   .brand-intro { animation: brand-intro-out 1s linear 0.4s forwards; }
   .brand-intro__mark,
   .brand-intro__wordmark,
+  .brand-intro__services,
   .brand-intro__border { animation: none; }
 }
 `;
@@ -97,16 +105,36 @@ export function BrandIntro() {
             className="h-48 w-48 sm:h-64 sm:w-64"
           />
         </div>
-        <div className="brand-intro__wordmark">
-          <Image
-            src="/brand/automaticus_logo_mobile.webp"
-            alt=""
-            width={525}
-            height={300}
-            loading="eager"
-            fetchPriority="high"
-            className="h-auto w-72 sm:w-[28rem]"
-          />
+        <div className="flex flex-col items-center gap-4 sm:gap-5">
+          <div className="brand-intro__wordmark">
+            <Image
+              src="/brand/automaticus_logo_mobile.webp"
+              alt=""
+              width={525}
+              height={300}
+              loading="eager"
+              fetchPriority="high"
+              className="h-auto w-72 sm:w-[28rem]"
+            />
+          </div>
+          <div className="brand-intro__services">
+            <p className="mb-1 text-center font-mono text-[8px] font-medium uppercase tracking-[0.48em] text-amber-200/60 sm:hidden">
+              Custom
+            </p>
+            <div className="flex items-center justify-center gap-2 font-mono text-[9.5px] font-medium uppercase tracking-[0.22em] text-amber-100/90 sm:gap-3 sm:text-[11px] sm:tracking-[0.28em]">
+              <span>
+                <span className="hidden sm:inline">Custom&nbsp;</span>Software
+              </span>
+              <span className="inline-block h-[3px] w-[3px] rotate-45 bg-amber-300/85 shadow-[0_0_6px_rgba(252,186,88,0.55)]" />
+              <span>
+                <span className="hidden sm:inline">Custom&nbsp;</span>Websites
+              </span>
+              <span className="inline-block h-[3px] w-[3px] rotate-45 bg-amber-300/85 shadow-[0_0_6px_rgba(252,186,88,0.55)]" />
+              <span>
+                <span className="hidden sm:inline">Custom&nbsp;</span>AI&nbsp;Workers
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </>

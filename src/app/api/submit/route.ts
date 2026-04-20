@@ -7,6 +7,7 @@ type Payload = {
   email?: string;
   phone?: string;
   company?: string;
+  businessDescription?: string;
   services?: string[];
   budget?: string;
   timeline?: string;
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
   const email = (body.email ?? "").trim();
   const phone = (body.phone ?? "").trim();
   const company = (body.company ?? "").trim();
+  const businessDescription = (body.businessDescription ?? "").trim().slice(0, 500);
   const services = Array.isArray(body.services) ? body.services.filter(Boolean) : [];
   const budget = (body.budget ?? "").trim();
   const timeline = (body.timeline ?? "").trim();
@@ -43,6 +45,7 @@ export async function POST(request: Request) {
 
   if (!name) return bad("Name is required.");
   if (!email || !EMAIL_RE.test(email)) return bad("A valid email is required.");
+  if (!businessDescription) return bad("A business description is required.");
   if (services.length === 0) return bad("Select at least one service.");
   if (!budget) return bad("Budget is required.");
   if (!timeline) return bad("Timeline is required.");
@@ -52,6 +55,7 @@ export async function POST(request: Request) {
     email,
     phone,
     company,
+    businessDescription,
     services: services.join(", "),
     budget,
     timeline,
