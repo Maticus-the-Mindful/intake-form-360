@@ -163,6 +163,7 @@ const styles = `
 }
 .idea-banner-text {
   font-size: 1rem;
+  font-weight: 400;
   line-height: 1.35;
   color: rgb(63 63 70);
   transition: opacity ${FADE_MS}ms ease;
